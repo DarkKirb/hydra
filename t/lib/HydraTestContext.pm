@@ -39,6 +39,8 @@ use Hydra::Helper::Exec;
 sub new {
     my ($class, %opts) = @_;
 
+    my $deststoredir;
+
     my $dir = File::Temp->newdir();
 
     $ENV{'HYDRA_DATA'} = "$dir/hydra-data";
