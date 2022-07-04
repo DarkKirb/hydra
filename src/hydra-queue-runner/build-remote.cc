@@ -185,7 +185,7 @@ BasicDerivation inlineInputDerivations(Store & store, Derivation & drv, const St
 {
     BasicDerivation ret;
     auto outputHashes = staticOutputHashes(store, drv);
-    if (!drv.type().hasKnownOutputPaths()) {
+    if (!drv.type().isFixed()) {
         auto maybeBasicDrv = drv.tryResolve(store);
         if (!maybeBasicDrv)
             throw Error(
