@@ -232,8 +232,8 @@ static void worker(
 
                 nlohmann::json out;
                 for (auto & j : outputs)
-                  if (localStore->maybeParseStorePath(j.second))
-                    out[j.first] = j.second;
+                  if (j.second.has_value())
+                    out[j.first] = j.second->to_string();
                   else
                     // If this isn't a real store path, it means that it's a
                     // placeholder.

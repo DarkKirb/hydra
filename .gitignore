@@ -45,3 +45,4 @@ src/hydra-evaluator/hydra-evaluator
 src/hydra-queue-runner/hydra-queue-runner
 src/root/static/fontawesome/
 src/root/static/bootstrap*/
+.direnv
