@@ -33,7 +33,7 @@ sub common {
 
     # Find matching configs
     foreach my $build ($topbuild, @{$dependents}) {
-        my $jobName = showJobName $build;
+        my $jobName = $build->project . ":" . $build->job;
         my $evals = $topbuild->jobsetevals;
         my $ua = LWP::UserAgent->new();
 
