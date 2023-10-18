@@ -25,6 +25,12 @@ sub toGithubState {
     }
 }
 
+sub showShortJobName {
+    my ($build) = @_;
+    my $jobset = $build->jobset;
+    return $jobset->get_column('project') . ":" . $build->get_column('job');
+}
+
 sub common {
     my ($self, $topbuild, $dependents, $finished, $cachedEval) = @_;
     my $cfg = $self->{config}->{githubstatus};
@@ -33,7 +39,7 @@ sub common {
 
     # Find matching configs
     foreach my $build ($topbuild, @{$dependents}) {
-        my $jobName = $build->project . ":" . $build->job;
+        my $jobName = showShortJobName($build);
         my $evals = $topbuild->jobsetevals;
         my $ua = LWP::UserAgent->new();
 
@@ -41,7 +47,7 @@ sub common {
             # Don't send out "pending" status updates if the build is already finished
             next if !$finished && $build->finished == 1;
 
-            my $contextTrailer = $conf->{excludeBuildFromContext} ? "" : (":" . $build->id);
+            my $contextTrailer = "";
             my $github_job_name = $jobName =~ s/-pr-\d+//r;
             my $extendedContext = $conf->{context} // "continuous-integration/hydra:" . $jobName . $contextTrailer;
             my $shortContext = $conf->{context} // "ci/hydra:" . $github_job_name . $contextTrailer;
