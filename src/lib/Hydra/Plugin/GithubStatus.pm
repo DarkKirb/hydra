@@ -38,7 +38,6 @@ sub common {
         my $ua = LWP::UserAgent->new();
 
         foreach my $conf (@config) {
-            next unless $jobName =~ /^$conf->{jobs}$/;
             # Don't send out "pending" status updates if the build is already finished
             next if !$finished && $build->finished == 1;
 
@@ -103,8 +102,12 @@ sub common {
                         print STDERR "Can't parse flake, skipping GitHub status update\n";
                     }
                 } else {
+                    next unless defined ($eval->jobsetevalinputs->find({ name => "github_input" }));
+                    my $input = $eval->jobsetevalinputs->find({ name => "github_input" })->value;
                     my $repoOwner = $eval->jobsetevalinputs->find({ name => "github_repo_owner" })->value;
                     my $repoName = $eval->jobsetevalinputs->find({ name => "github_repo_name" })->value;
+                    my $i = $eval->jobsetevalinputs->find({ name => $input, altnr => 0 });
+                    my $rev = $i->revision;
                     $sendStatus->($input, $repoOwner, $repoName, $rev);
                 }
             }
