@@ -11,7 +11,7 @@
   }: let
     version = "${builtins.readFile ./version.txt}.${builtins.substring 0 8 (self.lastModifiedDate or "19700101")}.${self.shortRev or "DIRTY"}";
 
-    systems = ["x86_64-linux" "aarch64-linux"];
+    systems = ["x86_64-linux" "aarch64-linux" "riscv64-linux"];
     forEachSystem = nixpkgs.lib.genAttrs systems;
 
     pkgsBySystem = forEachSystem (system:
