@@ -325,10 +325,6 @@ int main(int argc, char * * argv)
         /* FIXME: The build hook in conjunction with import-from-derivation is causing "unexpected EOF" during eval */
         settings.builders = "";
 
-        /* Prevent access to paths outside of the Nix search path and
-           to the environment. */
-        evalSettings.restrictEval = true;
-
         /* When building a flake, use pure evaluation (no access to
            'getEnv', 'currentSystem' etc. */
         evalSettings.pureEval = pureEval;
