@@ -12,7 +12,7 @@
 #include "util.hh"
 #include "get-drvs.hh"
 #include "globals.hh"
-#include "common-eval-args.hh"
+#include "lix/libcmd/common-eval-args.hh"
 #include "flake/flakeref.hh"
 #include "flake/flake.hh"
 #include "attr-path.hh"

@@ -48,12 +48,12 @@ else
     AC_MSG_ERROR([`$NIX_STORE_PROGRAM' doesn't support `--timeout'; please use a newer version.])
 fi
 
-PKG_CHECK_MODULES([NIX], [nix-main nix-expr nix-store])
+PKG_CHECK_MODULES([NIX], [lix-main lix-expr lix-store])
 
 testPath="$(dirname $(type -p expr))"
 AC_SUBST(testPath)
 
-CXXFLAGS+=" -include nix/config.h"
+CXXFLAGS+=" -include lix/config.h -std=gnu++20"
 
 AC_CONFIG_FILES([
   Makefile
