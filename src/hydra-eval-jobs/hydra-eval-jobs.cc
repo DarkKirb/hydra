@@ -9,7 +9,7 @@
 #include "eval-inline.hh"
 #include "eval-settings.hh"
 #include "signals.hh"
-#include "util.hh"
+#include "terminal.hh"
 #include "get-drvs.hh"
 #include "globals.hh"
 #include "lix/libcmd/common-eval-args.hh"

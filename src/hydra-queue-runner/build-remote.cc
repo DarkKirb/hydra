@@ -6,10 +6,10 @@
 #include <fcntl.h>
 
 #include "build-result.hh"
+#include "current-process.hh"
 #include "path.hh"
 #include "serve-protocol.hh"
 #include "state.hh"
-#include "util.hh"
 #include "serve-protocol.hh"
 #include "serve-protocol-impl.hh"
 #include "ssh.hh"

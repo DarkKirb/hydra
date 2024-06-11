@@ -1,5 +1,6 @@
 #include "db.hh"
 #include "hydra-config.hh"
+#include "logging.hh"
 #include "pool.hh"
 #include "shared.hh"
 #include "signals.hh"

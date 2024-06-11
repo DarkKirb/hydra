@@ -2,7 +2,8 @@
 
 #include <pqxx/pqxx>
 
-#include "util.hh"
+#include "strings.hh"
+#include "environment-variables.hh"
 
 
 struct Connection : pqxx::connection
