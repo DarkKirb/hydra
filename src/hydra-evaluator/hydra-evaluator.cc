@@ -191,7 +191,7 @@ struct Evaluator
             txn.commit();
         }
 
-        assert(jobset.pid == -1);
+        assert(jobset.pid);
 
         jobset.pid = startProcess([&]() {
             Strings args = { "hydra-eval-jobset", jobset.name.project, jobset.name.jobset };
@@ -206,7 +206,7 @@ struct Evaluator
 
     bool shouldEvaluate(Jobset & jobset)
     {
-        if (jobset.pid != -1) {
+        if (jobset.pid) {
             // Already running.
             debug("shouldEvaluate %s? no: already running",
                   jobset.name.display());
@@ -330,7 +330,7 @@ struct Evaluator
 
             if (state->runningEvals < maxEvals) {
                 for (auto & i : state->jobsets)
-                    if (i.second.pid == -1 &&
+                    if (!i.second.pid &&
                         i.second.checkInterval > 0)
                         sleepTime = std::min(sleepTime, std::chrono::seconds(
                                 std::max((time_t) 1, i.second.lastCheckedTime - now + i.second.checkInterval)));
@@ -407,7 +407,7 @@ struct Evaluator
                 for (auto & i : state->jobsets) {
                     auto & jobset(i.second);
 
-                    if (jobset.pid == pid) {
+                    if (jobset.pid.get() == pid) {
                         printInfo("evaluation of jobset ‘%s’ %s",
                             jobset.name.display(), statusToString(status));
 

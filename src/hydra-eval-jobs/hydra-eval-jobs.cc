@@ -349,14 +349,14 @@ int main(int argc, char * * argv)
         /* Start a handler thread per worker process. */
         auto handler = [&]()
         {
-            pid_t pid = -1;
+            Pid pid;
             try {
                 AutoCloseFD from, to;
 
                 while (true) {
 
                     /* Start a new worker process if necessary. */
-                    if (pid == -1) {
+                    if (!pid) {
                         Pipe toPipe, fromPipe;
                         toPipe.create();
                         fromPipe.create();
@@ -383,13 +383,13 @@ int main(int argc, char * * argv)
                             });
                         from = std::move(fromPipe.readSide);
                         to = std::move(toPipe.writeSide);
-                        debug("created worker process %d", pid);
+                        debug("created worker process %d", pid.get());
                     }
 
                     /* Check whether the existing worker process is still there. */
                     auto s = readLine(from.get());
                     if (s == "restart") {
-                        pid = -1;
+                        pid.wait();
                         continue;
                     } else if (s != "next") {
                         auto json = nlohmann::json::parse(s);
@@ -455,7 +455,7 @@ int main(int argc, char * * argv)
                     }
                 }
             } catch (...) {
-                check_pid_status_nonblocking(pid);
+                check_pid_status_nonblocking(pid.release());
                 auto state(state_.lock());
                 state->exc = std::current_exception();
                 wakeup.notify_all();
