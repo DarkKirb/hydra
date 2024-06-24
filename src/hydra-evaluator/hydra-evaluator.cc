@@ -191,7 +191,7 @@ struct Evaluator
             txn.commit();
         }
 
-        assert(jobset.pid);
+        assert(!jobset.pid);
 
         jobset.pid = startProcess([&]() {
             Strings args = { "hydra-eval-jobset", jobset.name.project, jobset.name.jobset };
