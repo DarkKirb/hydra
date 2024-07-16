@@ -809,41 +809,6 @@ sub checkJobsetWrapped {
                 $ev->jobsetevalmembers->create({ build => $id, isnew => $x->{new} });
             }
 
-            # Create AggregateConstituents mappings.  Since there can
-            # be jobs that alias each other, if there are multiple
-            # builds for the same derivation, pick the one with the
-            # shortest name.
-            my %drvPathToId;
-            foreach my $id (keys %buildMap) {
-                my $x = $buildMap{$id};
-                my $y = $drvPathToId{$x->{drvPath}};
-                if (defined $y) {
-                    next if length $x->{jobName} > length $y->{jobName};
-                    next if length $x->{jobName} == length $y->{jobName} && $x->{jobName} ge $y->{jobName};
-                }
-                $drvPathToId{$x->{drvPath}} = $x;
-            }
-
-            # XXX: dead code with nix-eval-jobs. To be removed.
-            foreach my $job (values @jobs) {
-                next unless $job->{constituents};
-
-                if (defined $job->{error}) {
-                    die "aggregate job ‘$job->{jobName}’ failed with the error: $job->{error}\n";
-                }
-
-                my $x = $drvPathToId{$job->{drvPath}} or
-                    die "aggregate job ‘$job->{jobName}’ has no corresponding build record.\n";
-                foreach my $drvPath (@{$job->{constituents}}) {
-                    my $constituent = $drvPathToId{$drvPath};
-                    if (defined $constituent) {
-                        $db->resultset('AggregateConstituents')->update_or_create({aggregate => $x->{id}, constituent => $constituent->{id}});
-                    } else {
-                        warn "aggregate job ‘$job->{jobName}’ has a constituent ‘$drvPath’ that doesn't correspond to a Hydra build\n";
-                    }
-                }
-            }
-
             foreach my $name (keys %{$inputInfo}) {
                 for (my $n = 0; $n < scalar(@{$inputInfo->{$name}}); $n++) {
                     my $input = $inputInfo->{$name}->[$n];
