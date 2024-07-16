@@ -16,7 +16,7 @@
         "type": "github"
       }
     },
-    "nix": {
+    "lix": {
       "inputs": {
         "flake-compat": "flake-compat",
         "nix2container": "nix2container",
@@ -27,17 +27,17 @@
         "pre-commit-hooks": "pre-commit-hooks"
       },
       "locked": {
-        "lastModified": 1720733512,
-        "narHash": "sha256-vq9CLDvqSSvH4L7YhDa0ihTOrAry4jntKiuoNb5n98M=",
+        "lastModified": 1721091462,
+        "narHash": "sha256-0cmEeoOiB91BviTJHzIyxkY+Gxv3O8ZnnExVAoXEFGI=",
         "ref": "refs/heads/main",
-        "rev": "4b109ec1a8fc4550150f56f0f46f2f41d844bda8",
-        "revCount": 15950,
+        "rev": "6b4d46e9e0e1dd80e0977684ab20d14bcd1a6bc3",
+        "revCount": 15967,
         "type": "git",
-        "url": "https://git@git.lix.systems/lix-project/lix"
+        "url": "https://git.lix.systems/lix-project/lix"
       },
       "original": {
         "type": "git",
-        "url": "https://git@git.lix.systems/lix-project/lix"
+        "url": "https://git.lix.systems/lix-project/lix"
       }
     },
     "nix2container": {
@@ -106,7 +106,7 @@
     },
     "root": {
       "inputs": {
-        "nix": "nix",
+        "lix": "lix",
         "nixpkgs": "nixpkgs"
       }
     }

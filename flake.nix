@@ -2,15 +2,16 @@
   description = "A Nix-based continuous build system";
 
   inputs.nixpkgs.url = "github:NixOS/nixpkgs/nixos-24.05";
-  inputs.nix.url = "git+https://git@git.lix.systems/lix-project/lix";
-  inputs.nix.inputs.nixpkgs.follows = "nixpkgs";
 
-  outputs = { self, nixpkgs, nix }:
+  inputs.lix.url = "git+https://git.lix.systems/lix-project/lix";
+  inputs.lix.inputs.nixpkgs.follows = "nixpkgs";
+
+  outputs = { self, nixpkgs, lix }:
     let
       systems = [ "x86_64-linux" "aarch64-linux" ];
       forEachSystem = nixpkgs.lib.genAttrs systems;
 
-      overlayList = [ self.overlays.default nix.overlays.default ];
+      overlayList = [ self.overlays.default lix.overlays.default ];
 
       pkgsBySystem = forEachSystem (system: import nixpkgs {
         inherit system;
