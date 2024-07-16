@@ -328,7 +328,6 @@ struct Machine : nix::Machine
         operator nix::ServeProto::WriteConn ()
         {
             return {
-                .to = to,
                 .version = remoteVersion,
             };
         }

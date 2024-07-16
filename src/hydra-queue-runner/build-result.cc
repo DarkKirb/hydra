@@ -36,7 +36,7 @@ BuildOutput getBuildOutput(
             printInfo("fetching NAR contents of '%s'...", outputS);
             auto source = sinkToSource([&](Sink & sink)
             {
-                store->narFromPath(output, sink);
+                sink << store->narFromPath(output);
             });
             extractNarData(*source, outputS, narMembers);
         }

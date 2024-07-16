@@ -121,7 +121,7 @@ static void copyClosureTo(
        the remote host to substitute missing paths. */
     // FIXME: substitute output pollutes our build log
     conn.to << ServeProto::Command::QueryValidPaths << 1 << useSubstitutes;
-    ServeProto::write(destStore, conn, closure);
+    conn.to << ServeProto::write(destStore, conn, closure);
     conn.to.flush();
 
     /* Get back the set of paths that are already valid on the remote
@@ -359,7 +359,7 @@ static std::map<StorePath, ValidPathInfo> queryPathInfos(
     /* Get info about each output path. */
     std::map<StorePath, ValidPathInfo> infos;
     conn.to << ServeProto::Command::QueryPathInfos;
-    ServeProto::write(localStore, conn, outputs);
+    conn.to << ServeProto::write(localStore, conn, outputs);
     conn.to.flush();
     while (true) {
         auto storePathS = readString(conn.from);
