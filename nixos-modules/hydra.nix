@@ -230,8 +230,7 @@ in
 
     nix.settings = {
       extra-trusted-users = [ "hydra" "hydra-queue-runner" "hydra-www" ];
-      gc-keep-outputs = true;
-      gc-keep-derivations = true;
+      keep-derivations = true;
     };
 
     services.hydra-dev.extraConfig =
