@@ -229,7 +229,7 @@ in
       };
 
     nix.settings = {
-      trusted-users = [ "hydra-queue-runner" ];
+      extra-trusted-users = [ "hydra" "hydra-queue-runner" "hydra-www" ];
       gc-keep-outputs = true;
       gc-keep-derivations = true;
     };
