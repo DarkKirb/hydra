@@ -65,8 +65,8 @@ static void openConnection(::Machine::ptr machine, Path tmpDir, int stderrFD, SS
         if (machine->sshKey != "") append(argv, {"-i", machine->sshKey});
         if (machine->sshPublicHostKey != "") {
             Path fileName = tmpDir + "/host-key";
-            auto p = machine->sshName.find("@");
-            std::string host = p != std::string::npos ? std::string(machine->sshName, p + 1) : machine->sshName;
+            auto p = sshName.find("@");
+            std::string host = p != std::string::npos ? std::string(sshName, p + 1) : sshName;
             writeFile(fileName, host + " " + machine->sshPublicHostKey + "\n");
             append(argv, {"-oUserKnownHostsFile=" + fileName});
         }
