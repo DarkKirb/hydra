@@ -20,8 +20,6 @@ Makefile.in
 /src/sql/hydra-postgresql.sql
 /src/sql/hydra-sqlite.sql
 /src/sql/tmp.sqlite
-/src/root/static/bootstrap
-/src/root/static/js/flot
 /tests
 /doc/manual/images
 /doc/manual/manual.html
@@ -43,5 +41,3 @@ config
 stamp-h1
 src/hydra-evaluator/hydra-evaluator
 src/hydra-queue-runner/hydra-queue-runner
-src/root/static/fontawesome/
-src/root/static/bootstrap*/
