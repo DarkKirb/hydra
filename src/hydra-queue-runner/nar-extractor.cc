@@ -42,7 +42,7 @@ struct Extractor : ParseSink
     void preallocateContents(uint64_t size) override
     {
         expectedSize = size;
-        hashSink = std::make_unique<HashSink>(htSHA256);
+        hashSink = std::make_unique<HashSink>(HashType::SHA256);
     }
 
     void receiveContents(std::string_view data) override
@@ -76,7 +76,19 @@ void extractNarData(
     const Path & prefix,
     NarMemberDatas & members)
 {
-    Extractor extractor(members, prefix);
-    parseDump(extractor, source);
-    // Note: this point may not be reached if we're in a coroutine.
+    auto parser = extractNarDataFilter(source, prefix, members);
+    while (parser.next()) {
+        // ignore raw data
+    }
+}
+
+nix::WireFormatGenerator extractNarDataFilter(
+    Source & source,
+    const Path & prefix,
+    NarMemberDatas & members)
+{
+    return [](Source & source, const Path & prefix, NarMemberDatas & members) -> WireFormatGenerator {
+        Extractor extractor(members, prefix);
+        co_yield parseAndCopyDump(extractor, source);
+    }(source, prefix, members);
 }

@@ -368,7 +368,7 @@ static std::map<StorePath, ValidPathInfo> queryPathInfos(
         auto references = ServeProto::Serialise<StorePathSet>::read(localStore, conn);
         readLongLong(conn.from); // download size
         auto narSize = readLongLong(conn.from);
-        auto narHash = Hash::parseAny(readString(conn.from), htSHA256);
+        auto narHash = Hash::parseAny(readString(conn.from), HashType::SHA256);
         auto ca = ContentAddress::parseOpt(readString(conn.from));
         readStrings<StringSet>(conn.from); // sigs
         ValidPathInfo info(localStore.parseStorePath(storePathS), narHash);
@@ -397,8 +397,7 @@ static void copyPathFromRemote(
       /* Receive the NAR from the remote and add it to the
           destination store. Meanwhile, extract all the info from the
           NAR that getBuildOutput() needs. */
-      auto source2 = sinkToSource([&](Sink & sink)
-      {
+      auto coro = [&]() -> WireFormatGenerator {
           /* Note: we should only send the command to dump the store
               path to the remote if the NAR is actually going to get read
               by the destination store, which won't happen if this path
@@ -409,11 +408,11 @@ static void copyPathFromRemote(
           conn.to << ServeProto::Command::DumpStorePath << localStore.printStorePath(info.path);
           conn.to.flush();
 
-          TeeSource tee(conn.from, sink);
-          extractNarData(tee, localStore.printStorePath(info.path), narMembers);
-      });
+          co_yield extractNarDataFilter(conn.from, localStore.printStorePath(info.path), narMembers);
+      };
+      GeneratorSource source2{coro()};
 
-      destStore.addToStore(info, *source2, NoRepair, NoCheckSigs);
+      destStore.addToStore(info, source2, NoRepair, NoCheckSigs);
 }
 
 static void copyPathsFromRemote(

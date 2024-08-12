@@ -21,3 +21,8 @@ void extractNarData(
     nix::Source & source,
     const nix::Path & prefix,
     NarMemberDatas & members);
+
+nix::WireFormatGenerator extractNarDataFilter(
+    nix::Source & source,
+    const nix::Path & prefix,
+    NarMemberDatas & members);

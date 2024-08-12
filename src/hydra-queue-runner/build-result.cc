@@ -34,11 +34,8 @@ BuildOutput getBuildOutput(
         auto outputS = store->printStorePath(output);
         if (!narMembers.count(outputS)) {
             printInfo("fetching NAR contents of '%s'...", outputS);
-            auto source = sinkToSource([&](Sink & sink)
-            {
-                sink << store->narFromPath(output);
-            });
-            extractNarData(*source, outputS, narMembers);
+            GeneratorSource source{store->narFromPath(output)};
+            extractNarData(source, outputS, narMembers);
         }
     }
 
