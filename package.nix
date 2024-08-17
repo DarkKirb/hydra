@@ -190,6 +190,7 @@ stdenv.mkDerivation (finalAttrs: {
     postgresql_13
     pixz
     nix-eval-jobs
+    perlPackages.PLS
   ];
 
   checkInputs = [
