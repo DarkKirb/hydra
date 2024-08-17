@@ -28,4 +28,4 @@ use-substitutes = true
 </hydra_notify>
 EOF
 fi
-HYDRA_CONFIG=$(pwd)/.hydra-data/hydra.conf exec hydra-dev-server --port 63333 --restart --debug
+HYDRA_CONFIG=$(pwd)/.hydra-data/hydra.conf exec $(pwd)/outputs/out/bin/hydra-dev-server --port 63333 --restart --debug

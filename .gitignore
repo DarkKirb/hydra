@@ -5,3 +5,5 @@
 /src/sql/tmp.sqlite
 result
 result-*
+.hydra-data
+outputs

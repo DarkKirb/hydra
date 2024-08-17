@@ -37,6 +37,7 @@
 
 , cacert
 , foreman
+, just
 , glibcLocales
 , libressl
 , openldap
@@ -191,6 +192,7 @@ stdenv.mkDerivation (finalAttrs: {
     pixz
     nix-eval-jobs
     perlPackages.PLS
+    just
   ];
 
   checkInputs = [
@@ -234,8 +236,8 @@ stdenv.mkDerivation (finalAttrs: {
   shellHook = ''
     pushd $(git rev-parse --show-toplevel) >/dev/null
 
-    PATH=$(pwd)/src/hydra-evaluator:$(pwd)/src/script:$(pwd)/src/hydra-queue-runner:$PATH
-    PERL5LIB=$(pwd)/src/lib:$PERL5LIB
+    PATH=$(pwd)/outputs/out/bin:$PATH
+    PERL5LIB=$(pwd)/src/lib:$(pwd)/t/lib:$PERL5LIB
     export HYDRA_HOME="$(pwd)/src/"
     mkdir -p .hydra-data
     export HYDRA_DATA="$(pwd)/.hydra-data"

@@ -12,15 +12,14 @@ To enter a shell in which all environment variables (such as `PERL5LIB`)
 and dependencies can be found:
 
 ```console
-$ nix-shell
+$ nix develop
 ```
 
 To build Hydra, you should then do:
 
 ```console
-[nix-shell]$ autoreconfPhase
-[nix-shell]$ configurePhase
-[nix-shell]$ make
+[nix-shell]$ just setup
+[nix-shell]$ just install
 ```
 
 You start a local database, the webserver, and other components with
@@ -41,17 +40,12 @@ $ ./src/script/hydra-server
 You can run Hydra's test suite with the following:
 
 ```console
-[nix-shell]$ make check
-[nix-shell]$ # to run as many tests as you have cores:
-[nix-shell]$ make check YATH_JOB_COUNT=$NIX_BUILD_CORES
+[nix-shell]$ just test
 [nix-shell]$ # or run yath directly:
 [nix-shell]$ yath test
 [nix-shell]$ # to run as many tests as you have cores:
 [nix-shell]$ yath test -j $NIX_BUILD_CORES
 ```
-
-When using `yath` instead of `make check`, ensure you have run `make`
-in the root of the repository at least once.
 
 **Warning**: Currently, the tests can fail
 if run with high parallelism [due to an issue in
