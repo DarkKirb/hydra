@@ -6,7 +6,7 @@
 --    add a map of the lowercase name of your table to the CamelCase
 --    version of your table.
 --
--- 3. Run `make -C src/sql update-dbix` in the root
+-- 3. Run `just update-dbix` in the root
 --    of the project directory, and git add / git commit the changed,
 --    generated files.
 --

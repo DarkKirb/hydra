@@ -78,11 +78,11 @@ $ nix-build
 ### Development Environment
 
 You can use the provided shell.nix to get a working development environment:
+
 ```
-$ nix-shell
-$ autoreconfPhase
-$ configurePhase # NOTE: not ./configure
-$ make
+$ nix develop
+[nix-shell]$ just setup
+[nix-shell]$ just install
 ```
 
 ### Executing Hydra During Development
@@ -91,10 +91,9 @@ When working on new features or bug fixes you need to be able to run Hydra from 
 can be done using [foreman](https://github.com/ddollar/foreman):
 
 ```
-$ nix-shell
-$ # hack hack
-$ make
-$ foreman start
+$ nix develop
+[nix-shell]$ just install
+[nix-shell]$ foreman start
 ```
 
 Have a look at the [Procfile](./Procfile) if you want to see how the processes are being started. In order to avoid
@@ -115,22 +114,22 @@ Start by following the steps in [Development Environment](#development-environme
 Then, you can run the tests and the perlcritic linter together with:
 
 ```console
-$ nix-shell
-$ make check
+$ nix develop
+[nix-shell]$ just test
 ```
 
 You can run a single test with:
 
 ```
-$ nix-shell
-$ yath test ./t/foo/bar.t
+$ nix develop
+[nix-shell]$ yath test ./t/foo/bar.t
 ```
 
 And you can run just perlcritic with:
 
 ```
-$ nix-shell
-$ make perlcritic
+$ nix develop
+[nix-shell]$ just perlcritic
 ```
 
 ### JSON API

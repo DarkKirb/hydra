@@ -97,3 +97,14 @@ Off NixOS, change `/etc/nix/nix.conf`:
 ```conf
 trusted-users = root YOURUSERNAME
 ```
+
+### Updating schema bindings
+
+```
+just update-dbix
+```
+
+### Find the builds with the highest number of build steps:
+
+        select id, (select count(*) from buildsteps where build = x.id) as n from builds x order by n desc;
+
