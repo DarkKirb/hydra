@@ -172,7 +172,7 @@ subtest "/api/push-github" => sub {
             "Content" => encode_json({
                 repository => {
                     owner => {
-                        name => "OWNER",
+                        login => "OWNER",
                     },
                     name => "LEGACY-REPO",
                 }
@@ -198,7 +198,7 @@ subtest "/api/push-github" => sub {
             "Content" => encode_json({
                 repository => {
                     owner => {
-                        name => "OWNER",
+                        login => "OWNER",
                     },
                     name => "FLAKE-REPO",
                 }

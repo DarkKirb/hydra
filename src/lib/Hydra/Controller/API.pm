@@ -273,7 +273,7 @@ sub push_github : Chained('api') PathPart('push-github') Args(0) {
     $c->{stash}->{json}->{jobsetsTriggered} = [];
 
     my $in = $c->request->{data};
-    my $owner = $in->{repository}->{owner}->{name} or die;
+    my $owner = $in->{repository}->{owner}->{login} or die;
     my $repo = $in->{repository}->{name} or die;
     print STDERR "got push from GitHub repository $owner/$repo\n";
 
