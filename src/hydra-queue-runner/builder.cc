@@ -72,7 +72,7 @@ void State::builder(MachineReservation::ptr reservation)
             step_->tries++;
             nrRetries++;
             if (step_->tries > maxNrRetries) maxNrRetries = step_->tries; // yeah yeah, not atomic
-            int delta = retryInterval * std::pow(retryBackoff, step_->tries - 1) + (rand() % 10);
+            int delta = static_cast<int>(retryInterval * std::pow(retryBackoff, step_->tries - 1) + (rand() % 10));
             printMsg(lvlInfo, "will retry ‘%s’ after %ss", localStore->printStorePath(step->drvPath), delta);
             step_->after = std::chrono::system_clock::now() + std::chrono::seconds(delta);
         }
@@ -251,7 +251,7 @@ State::StepResult State::doBuildStep(nix::ref<Store> destStore,
         auto step_(step->state.lock());
         if (!step_->jobsets.empty()) {
             // FIXME: loss of precision.
-            time_t charge = (result.stopTime - result.startTime) / step_->jobsets.size();
+            time_t charge = (result.stopTime - result.startTime) / static_cast<time_t>(step_->jobsets.size());
             for (auto & jobset : step_->jobsets)
                 jobset->addStep(result.startTime, charge);
         }

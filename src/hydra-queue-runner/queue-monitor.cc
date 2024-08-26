@@ -52,7 +52,7 @@ void State::queueMonitorLoop(Connection & conn)
         auto t_after_work = std::chrono::steady_clock::now();
 
         prom.queue_monitor_time_spent_running.Increment(
-            std::chrono::duration_cast<std::chrono::microseconds>(t_after_work - t_before_work).count());
+            static_cast<double>(std::chrono::duration_cast<std::chrono::microseconds>(t_after_work - t_before_work).count()));
 
         /* Sleep until we get notification from the database about an
            event. */
@@ -79,7 +79,7 @@ void State::queueMonitorLoop(Connection & conn)
 
         auto t_after_sleep = std::chrono::steady_clock::now();
         prom.queue_monitor_time_spent_waiting.Increment(
-            std::chrono::duration_cast<std::chrono::microseconds>(t_after_sleep - t_after_work).count());
+            static_cast<double>(std::chrono::duration_cast<std::chrono::microseconds>(t_after_sleep - t_after_work).count()));
     }
 
     exit(0);
@@ -355,7 +355,7 @@ void State::processQueueChange(Connection & conn)
         pqxx::work txn(conn);
         auto res = txn.exec("select id, globalPriority from Builds where finished = 0");
         for (auto const & row : res)
-            currentIds[row["id"].as<BuildID>()] = row["globalPriority"].as<BuildID>();
+            currentIds[row["id"].as<BuildID>()] = row["globalPriority"].as<int>();
     }
 
     {

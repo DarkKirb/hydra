@@ -46,7 +46,7 @@ void State::dispatcher()
             auto t_after_work = std::chrono::steady_clock::now();
 
             prom.dispatcher_time_spent_running.Increment(
-                std::chrono::duration_cast<std::chrono::microseconds>(t_after_work - t_before_work).count());
+                static_cast<double>(std::chrono::duration_cast<std::chrono::microseconds>(t_after_work - t_before_work).count()));
             dispatchTimeMs += std::chrono::duration_cast<std::chrono::milliseconds>(t_after_work - t_before_work).count();
 
             /* Sleep until we're woken up (either because a runnable build
@@ -63,7 +63,7 @@ void State::dispatcher()
 
             auto t_after_sleep = std::chrono::steady_clock::now();
             prom.dispatcher_time_spent_waiting.Increment(
-                std::chrono::duration_cast<std::chrono::microseconds>(t_after_sleep - t_after_work).count());
+                static_cast<double>(std::chrono::duration_cast<std::chrono::microseconds>(t_after_sleep - t_after_work).count()));
 
         } catch (std::exception & e) {
             printError("dispatcher: %s", e.what());
@@ -243,8 +243,8 @@ system_time State::doDispatch()
         sort(machinesSorted.begin(), machinesSorted.end(),
             [](const MachineInfo & a, const MachineInfo & b) -> bool
             {
-                float ta = std::round(a.currentJobs / a.machine->speedFactorFloat);
-                float tb = std::round(b.currentJobs / b.machine->speedFactorFloat);
+                float ta = std::round(static_cast<float>(a.currentJobs) / a.machine->speedFactorFloat);
+                float tb = std::round(static_cast<float>(b.currentJobs) / b.machine->speedFactorFloat);
                 return
                     ta != tb ? ta < tb :
                     a.machine->speedFactorFloat != b.machine->speedFactorFloat ? a.machine->speedFactorFloat > b.machine->speedFactorFloat :

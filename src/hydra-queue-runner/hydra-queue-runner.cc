@@ -105,7 +105,7 @@ State::State(std::optional<std::string> metricsAddrOpt)
     : config(std::make_unique<HydraConfig>())
     , maxUnsupportedTime(config->getIntOption("max_unsupported_time", 0))
     , dbPool(config->getIntOption("max_db_connections", 128))
-    , localWorkThrottler(config->getIntOption("max_local_worker_threads", std::min(maxSupportedLocalWorkers, std::max(4u, std::thread::hardware_concurrency()) - 2)))
+    , localWorkThrottler(static_cast<ptrdiff_t>(config->getIntOption("max_local_worker_threads", std::min(maxSupportedLocalWorkers, std::max(4u, std::thread::hardware_concurrency()) - 2))))
     , maxOutputSize(config->getIntOption("max_output_size", 2ULL << 30))
     , maxLogSize(config->getIntOption("max_log_size", 64ULL << 20))
     , uploadLogsToBinaryCache(config->getBoolOption("upload_logs_to_binary_cache", false))
@@ -198,7 +198,7 @@ void State::parseMachines(const std::string & contents)
 
         machine->sshName = tokens[0];
         machine->systemTypesSet = tokenizeString<StringSet>(tokens[1], ",");
-        machine->speedFactorFloat = atof(tokens[4].c_str());
+        machine->speedFactorFloat = static_cast<float>(atof(tokens[4].c_str()));
 
         /* Re-use the State object of the previous machine with the
            same name. */
@@ -412,7 +412,7 @@ void State::finishBuildStep(pqxx::work & txn, const RemoteResult & result,
 }
 
 
-int State::createSubstitutionStep(pqxx::work & txn, time_t startTime, time_t stopTime,
+unsigned int State::createSubstitutionStep(pqxx::work & txn, time_t startTime, time_t stopTime,
     Build::ptr build, const StorePath & drvPath, const nix::Derivation drv, const std::string & outputName, const StorePath & storePath)
 {
  restart:
@@ -620,7 +620,7 @@ void State::dumpStatus(Connection & conn)
         {"bytesReceived", bytesReceived.load()},
         {"nrBuildsRead", nrBuildsRead.load()},
         {"buildReadTimeMs", buildReadTimeMs.load()},
-        {"buildReadTimeAvgMs", nrBuildsRead == 0 ? 0.0 : (float) buildReadTimeMs / nrBuildsRead},
+        {"buildReadTimeAvgMs", nrBuildsRead == 0 ? 0.0 : (float) buildReadTimeMs / (float) nrBuildsRead},
         {"nrBuildsDone", nrBuildsDone.load()},
         {"nrStepsStarted", nrStepsStarted.load()},
         {"nrStepsDone", nrStepsDone.load()},
@@ -629,7 +629,7 @@ void State::dumpStatus(Connection & conn)
         {"nrQueueWakeups", nrQueueWakeups.load()},
         {"nrDispatcherWakeups", nrDispatcherWakeups.load()},
         {"dispatchTimeMs", dispatchTimeMs.load()},
-        {"dispatchTimeAvgMs", nrDispatcherWakeups == 0 ? 0.0 : (float) dispatchTimeMs / nrDispatcherWakeups},
+        {"dispatchTimeAvgMs", nrDispatcherWakeups == 0 ? 0.0 : (float) dispatchTimeMs / (float) nrDispatcherWakeups},
         {"nrDbConnections", dbPool.count()},
         {"nrActiveDbUpdates", nrActiveDbUpdates.load()},
     };
@@ -649,8 +649,8 @@ void State::dumpStatus(Connection & conn)
         if (nrStepsDone) {
             statusJson["totalStepTime"] = totalStepTime.load();
             statusJson["totalStepBuildTime"] = totalStepBuildTime.load();
-            statusJson["avgStepTime"] = (float) totalStepTime / nrStepsDone;
-            statusJson["avgStepBuildTime"] = (float) totalStepBuildTime / nrStepsDone;
+            statusJson["avgStepTime"] = (float) totalStepTime / (float) nrStepsDone;
+            statusJson["avgStepBuildTime"] = (float) totalStepBuildTime / (float) nrStepsDone;
         }
 
         {
@@ -677,8 +677,8 @@ void State::dumpStatus(Connection & conn)
                 if (m->state->nrStepsDone) {
                     machine["totalStepTime"] = s->totalStepTime.load();
                     machine["totalStepBuildTime"] = s->totalStepBuildTime.load();
-                    machine["avgStepTime"] = (float) s->totalStepTime / s->nrStepsDone;
-                    machine["avgStepBuildTime"] = (float) s->totalStepBuildTime / s->nrStepsDone;
+                    machine["avgStepTime"] = (float) s->totalStepTime / (float) s->nrStepsDone;
+                    machine["avgStepBuildTime"] = (float) s->totalStepBuildTime / (float) s->nrStepsDone;
                 }
                 statusJson["machines"][m->sshName] = machine;
             }
@@ -732,11 +732,11 @@ void State::dumpStatus(Connection & conn)
             {"narWriteCompressionTimeMs", stats.narWriteCompressionTimeMs.load()},
             {"narCompressionSavings",
              stats.narWriteBytes
-             ? 1.0 - (double) stats.narWriteCompressedBytes / stats.narWriteBytes
+             ? 1.0 - (double) stats.narWriteCompressedBytes / (double) stats.narWriteBytes
              : 0.0},
             {"narCompressionSpeed", // MiB/s
             stats.narWriteCompressionTimeMs
-            ? (double) stats.narWriteBytes / stats.narWriteCompressionTimeMs * 1000.0 / (1024.0 * 1024.0)
+            ? (double) stats.narWriteBytes / (double) stats.narWriteCompressionTimeMs * 1000.0 / (1024.0 * 1024.0)
             : 0.0},
         };
 
@@ -749,20 +749,20 @@ void State::dumpStatus(Connection & conn)
                 {"putTimeMs", s3Stats.putTimeMs.load()},
                 {"putSpeed",
                  s3Stats.putTimeMs
-                 ? (double) s3Stats.putBytes / s3Stats.putTimeMs * 1000.0 / (1024.0 * 1024.0)
+                 ? (double) s3Stats.putBytes / (double) s3Stats.putTimeMs * 1000.0 / (1024.0 * 1024.0)
                  : 0.0},
                 {"get", s3Stats.get.load()},
                 {"getBytes", s3Stats.getBytes.load()},
                 {"getTimeMs", s3Stats.getTimeMs.load()},
                 {"getSpeed",
                  s3Stats.getTimeMs
-                 ? (double) s3Stats.getBytes / s3Stats.getTimeMs * 1000.0 / (1024.0 * 1024.0)
+                 ? (double) s3Stats.getBytes / (double) s3Stats.getTimeMs * 1000.0 / (1024.0 * 1024.0)
                  : 0.0},
                 {"head", s3Stats.head.load()},
                 {"costDollarApprox",
-                        (s3Stats.get + s3Stats.head) / 10000.0 * 0.004
-                        + s3Stats.put / 1000.0 * 0.005 +
-                        + s3Stats.getBytes / (1024.0 * 1024.0 * 1024.0) * 0.09},
+                        (double) (s3Stats.get + s3Stats.head) / 10000.0 * 0.004
+                        + (double) s3Stats.put / 1000.0 * 0.005 +
+                        + (double) s3Stats.getBytes / (1024.0 * 1024.0 * 1024.0) * 0.09},
             };
         }
     }

@@ -88,7 +88,7 @@ struct Evaluator
         JobsetId name;
         std::optional<EvaluationStyle> evaluation_style;
         time_t lastCheckedTime, triggerTime;
-        int checkInterval;
+        time_t checkInterval;
         Pid pid;
     };
 
@@ -144,7 +144,9 @@ struct Evaluator
             jobset.lastCheckedTime = row["lastCheckedTime"].as<time_t>(0);
             jobset.triggerTime = row["triggerTime"].as<time_t>(notTriggered);
             jobset.checkInterval = row["checkInterval"].as<time_t>();
-            switch (row["jobset_enabled"].as<int>(0)) {
+
+            int eval_style = row["jobset_enabled"].as<int>(0);
+            switch (eval_style) {
                 case 1:
                     jobset.evaluation_style = EvaluationStyle::SCHEDULE;
                     break;
@@ -153,6 +155,9 @@ struct Evaluator
                     break;
                 case 3:
                     jobset.evaluation_style = EvaluationStyle::ONE_AT_A_TIME;
+                    break;
+                default:
+                    // Disabled or unknown. Leave as nullopt.
                     break;
             }
 

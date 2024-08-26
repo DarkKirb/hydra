@@ -41,6 +41,7 @@ static Strings extraStoreArgs(std::string & machine)
         }
     } catch (BadURL &) {
         // We just try to continue with `machine->sshName` here for backwards compat.
+        printMsg(lvlWarn, "could not parse machine URL '%s', passing through to SSH", machine);
     }
 
     return result;
@@ -697,7 +698,7 @@ void State::buildRemote(ref<Store> destStore,
         if (info->consecutiveFailures == 0 || info->lastFailure < now - std::chrono::seconds(30)) {
             info->consecutiveFailures = std::min(info->consecutiveFailures + 1, (unsigned int) 4);
             info->lastFailure = now;
-            int delta = retryInterval * std::pow(retryBackoff, info->consecutiveFailures - 1) + (rand() % 30);
+            int delta = static_cast<int>(retryInterval * std::pow(retryBackoff, info->consecutiveFailures - 1) + (rand() % 30));
             printMsg(lvlInfo, "will disable machine ‘%1%’ for %2%s", machine->sshName, delta);
             info->disabledUntil = now + std::chrono::seconds(delta);
         }
