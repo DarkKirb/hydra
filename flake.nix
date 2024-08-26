@@ -73,6 +73,21 @@
         default = pkgsBySystem.${system}.hydra;
       });
 
+      devShells = forEachSystem (system: let
+        pkgs = pkgsBySystem.${system};
+        lib = pkgs.lib;
+
+        mkDevShell = stdenv: (pkgs.mkShell.override { inherit stdenv; }) {
+          inputsFrom = [ (self.packages.${system}.default.override { inherit stdenv; }) ];
+
+          packages =
+            lib.optional (stdenv.cc.isClang && stdenv.hostPlatform == stdenv.buildPlatform) pkgs.clang-tools;
+        };
+      in {
+        default = mkDevShell pkgs.stdenv;
+        clang = mkDevShell pkgs.clangStdenv;
+      });
+
       nixosModules = import ./nixos-modules {
         overlays = overlayList;
       };
