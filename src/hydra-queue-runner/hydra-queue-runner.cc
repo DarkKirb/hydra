@@ -173,7 +173,7 @@ void State::parseMachines(const std::string & contents)
 
         using MaxJobs = std::remove_const<decltype(nix::Machine::maxJobs)>::type;
 
-        auto machine = std::make_shared<::Machine>(nix::Machine {
+        auto machine = std::make_shared<::Machine>(::Machine {{
             // `storeUri`, not yet used
             "",
             // `systemTypes`, not yet used
@@ -194,7 +194,7 @@ void State::parseMachines(const std::string & contents)
             tokens[7] != "" && tokens[7] != "-"
                 ? base64Decode(tokens[7])
                 : "",
-        });
+        }});
 
         machine->sshName = tokens[0];
         machine->systemTypesSet = tokenizeString<StringSet>(tokens[1], ",");
