@@ -14,11 +14,12 @@
 #include <sys/wait.h>
 
 #include <boost/format.hpp>
+#include <utility>
 
 using namespace nix;
 using boost::format;
 
-typedef std::pair<std::string, std::string> JobsetName;
+using JobsetName = std::pair<std::string, std::string>;
 
 class JobsetId {
     public:
@@ -28,8 +29,8 @@ class JobsetId {
     int id;
 
 
-    JobsetId(const std::string & project, const std::string & jobset, int id)
-        : project{ project }, jobset{ jobset }, id{ id }
+    JobsetId(std::string  project, std::string  jobset, int id)
+        : project{std::move( project )}, jobset{std::move( jobset )}, id{ id }
     {
     }
 
@@ -41,7 +42,7 @@ class JobsetId {
     friend bool operator== (const JobsetId & lhs, const JobsetName & rhs);
     friend bool operator!= (const JobsetId & lhs, const JobsetName & rhs);
 
-    std::string display() const {
+    [[nodiscard]] std::string display() const {
         return str(format("%1%:%2% (jobset#%3%)") % project % jobset % id);
     }
 };
@@ -92,7 +93,7 @@ struct Evaluator
         Pid pid;
     };
 
-    typedef std::map<JobsetId, Jobset> Jobsets;
+    using Jobsets = std::map<JobsetId, Jobset>;
 
     std::optional<JobsetName> evalOne;
 
@@ -138,7 +139,7 @@ struct Evaluator
 
             if (evalOne && name != *evalOne) continue;
 
-            auto res = state->jobsets.try_emplace(name, Jobset{name});
+            auto res = state->jobsets.try_emplace(name, Jobset{.name=name});
 
             auto & jobset = res.first->second;
             jobset.lastCheckedTime = row["lastCheckedTime"].as<time_t>(0);
@@ -180,7 +181,7 @@ struct Evaluator
 
     void startEval(State & state, Jobset & jobset)
     {
-        time_t now = time(0);
+        time_t now = time(nullptr);
 
         printInfo("starting evaluation of jobset ‘%s’ (last checked %d s ago)",
             jobset.name.display(),
@@ -233,7 +234,7 @@ struct Evaluator
             return false;
         }
 
-        if (jobset.lastCheckedTime + jobset.checkInterval <= time(0)) {
+        if (jobset.lastCheckedTime + jobset.checkInterval <= time(nullptr)) {
             // Time to schedule a fresh evaluation. If the jobset
             // is a ONE_AT_A_TIME jobset, ensure the previous jobset
             // has no remaining, unfinished work.
@@ -306,7 +307,7 @@ struct Evaluator
 
         /* Put jobsets in order of ascending trigger time, last checked
            time, and name. */
-        std::sort(sorted.begin(), sorted.end(),
+        std::ranges::sort(sorted,
             [](const Jobsets::iterator & a, const Jobsets::iterator & b) {
                 return
                     a->second.triggerTime != b->second.triggerTime
@@ -329,7 +330,7 @@ struct Evaluator
 
         while (true) {
 
-            time_t now = time(0);
+            time_t now = time(nullptr);
 
             std::chrono::seconds sleepTime = std::chrono::seconds::max();
 
@@ -416,7 +417,7 @@ struct Evaluator
                         printInfo("evaluation of jobset ‘%s’ %s",
                             jobset.name.display(), statusToString(status));
 
-                        auto now = time(0);
+                        auto now = time(nullptr);
 
                         jobset.triggerTime = notTriggered;
                         jobset.lastCheckedTime = now;

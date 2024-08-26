@@ -138,7 +138,7 @@ nix::MaintainCount<counter> State::startDbUpdate()
 {
     if (nrActiveDbUpdates > 6)
         printError("warning: %d concurrent database updates; PostgreSQL may be stalled", nrActiveDbUpdates.load());
-    return MaintainCount<counter>(nrActiveDbUpdates);
+    return {nrActiveDbUpdates};
 }
 
 
@@ -171,7 +171,7 @@ void State::parseMachines(const std::string & contents)
         for (auto & f : mandatoryFeatures)
             supportedFeatures.insert(f);
 
-        using MaxJobs = std::remove_const<decltype(nix::Machine::maxJobs)>::type;
+        using MaxJobs = std::remove_const_t<decltype(nix::Machine::maxJobs)>;
 
         auto machine = std::make_shared<::Machine>(::Machine {{
             // `storeUri`, not yet used
@@ -594,7 +594,7 @@ std::shared_ptr<PathLocks> State::acquireGlobalLock()
     createDirs(dirOf(lockPath));
 
     auto lock = std::make_shared<PathLocks>();
-    if (!lock->lockPaths(PathSet({lockPath}), "", false)) return 0;
+    if (!lock->lockPaths(PathSet({lockPath}), "", false)) return nullptr;
 
     return lock;
 }
@@ -602,10 +602,10 @@ std::shared_ptr<PathLocks> State::acquireGlobalLock()
 
 void State::dumpStatus(Connection & conn)
 {
-    time_t now = time(0);
+    time_t now = time(nullptr);
     json statusJson = {
         {"status", "up"},
-        {"time", time(0)},
+        {"time", time(nullptr)},
         {"uptime", now - startedAt},
         {"pid", getpid()},
 
@@ -706,7 +706,7 @@ void State::dumpStatus(Connection & conn)
                 };
                 if (i.second.runnable > 0)
                     machineTypeJson["waitTime"] = i.second.waitTime.count() +
-                        i.second.runnable * (time(0) - lastDispatcherCheck);
+                        i.second.runnable * (time(nullptr) - lastDispatcherCheck);
                 if (i.second.running == 0)
                     machineTypeJson["lastActive"] = std::chrono::system_clock::to_time_t(i.second.lastActive);
             }
@@ -848,7 +848,7 @@ void State::run(BuildID buildOne)
     /* Can't be bothered to shut down cleanly. Goodbye! */
     auto callback = createInterruptCallback([&]() { std::_Exit(0); });
 
-    startedAt = time(0);
+    startedAt = time(nullptr);
     this->buildOne = buildOne;
 
     auto lock = acquireGlobalLock();

@@ -13,7 +13,7 @@ struct NarMemberData
     std::optional<nix::Hash> sha256;
 };
 
-typedef std::map<nix::Path, NarMemberData> NarMemberDatas;
+using NarMemberDatas = std::map<nix::Path, NarMemberData>;
 
 /* Read a NAR from a source and get to some info about every file
    inside the NAR. */

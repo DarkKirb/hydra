@@ -1,5 +1,6 @@
 #include <algorithm>
 #include <cmath>
+#include <ranges>
 
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -134,8 +135,8 @@ static void copyClosureTo(
     auto sorted = destStore.topoSortPaths(closure);
 
     StorePathSet missing;
-    for (auto i = sorted.rbegin(); i != sorted.rend(); ++i)
-        if (!present.count(*i)) missing.insert(*i);
+    for (auto & i : std::ranges::reverse_view(sorted))
+        if (!present.count(i)) missing.insert(i);
 
     printMsg(lvlDebug, "sending %d missing paths", missing.size());
 
@@ -305,12 +306,12 @@ static BuildResult performBuild(
 
     time_t startTime, stopTime;
 
-    startTime = time(0);
+    startTime = time(nullptr);
     {
         MaintainCount<counter> mc(nrStepsBuilding);
         result = ServeProto::Serialise<BuildResult>::read(localStore, conn);
     }
-    stopTime = time(0);
+    stopTime = time(nullptr);
 
     if (!result.startTime) {
         // If the builder gave `startTime = 0`, use our measurements
@@ -339,10 +340,10 @@ static BuildResult performBuild(
             // were known
             assert(outputPath);
             auto outputHash = outputHashes.at(outputName);
-            auto drvOutput = DrvOutput { outputHash, outputName };
+            auto drvOutput = DrvOutput { .drvHash=outputHash, .outputName=outputName };
             result.builtOutputs.insert_or_assign(
                 std::move(outputName),
-                Realisation { drvOutput, *outputPath });
+                Realisation { .id=drvOutput, .outPath=*outputPath });
         }
     }
 
@@ -635,7 +636,7 @@ void State::buildRemote(ref<Store> destStore,
          * copying outputs and we end up building too many things that we
          * haven't been able to allow copy slots for. */
         assert(reservation.unique());
-        reservation = 0;
+        reservation = nullptr;
         wakeDispatcher();
 
         StorePathSet outputs;

@@ -14,7 +14,7 @@ struct BuildProduct
     bool isRegular = false;
     std::optional<nix::Hash> sha256hash;
     std::optional<off_t> fileSize;
-    BuildProduct() { }
+    BuildProduct() = default;
 };
 
 struct BuildMetric

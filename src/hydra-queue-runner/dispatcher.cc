@@ -190,7 +190,7 @@ system_time State::doDispatch()
         }
     }
 
-    sort(runnableSorted.begin(), runnableSorted.end(),
+    std::ranges::sort(runnableSorted,
         [](const StepInfo & a, const StepInfo & b)
         {
             return
@@ -240,7 +240,7 @@ system_time State::doDispatch()
            - Then by speed factor.
 
            - Finally by load. */
-        sort(machinesSorted.begin(), machinesSorted.end(),
+        std::ranges::sort(machinesSorted,
             [](const MachineInfo & a, const MachineInfo & b) -> bool
             {
                 float ta = std::round(static_cast<float>(a.currentJobs) / a.machine->speedFactorFloat);
@@ -345,7 +345,7 @@ void State::abortUnsupported()
     auto machines2 = *machines.lock();
 
     system_time now = std::chrono::system_clock::now();
-    auto now2 = time(0);
+    auto now2 = time(nullptr);
 
     std::unordered_set<Step::ptr> aborted;
 
@@ -436,7 +436,7 @@ void Jobset::addStep(time_t startTime, time_t duration)
 
 void Jobset::pruneSteps()
 {
-    time_t now = time(0);
+    time_t now = time(nullptr);
     auto steps_(steps.lock());
     while (!steps_->empty()) {
         auto i = steps_->begin();
@@ -464,7 +464,7 @@ State::MachineReservation::~MachineReservation()
     auto prev = machine->state->currentJobs--;
     assert(prev);
     if (prev == 1)
-        machine->state->idleSince = time(0);
+        machine->state->idleSince = time(nullptr);
 
     {
         auto machineTypes_(state.machineTypes.lock());

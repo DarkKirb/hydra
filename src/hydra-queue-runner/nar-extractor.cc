@@ -3,6 +3,7 @@
 #include "archive.hh"
 
 #include <unordered_set>
+#include <utility>
 
 using namespace nix;
 
@@ -18,8 +19,8 @@ struct Extractor : ParseSink
     NarMemberData * curMember = nullptr;
     Path prefix;
 
-    Extractor(NarMemberDatas & members, const Path & prefix)
-        : members(members), prefix(prefix)
+    Extractor(NarMemberDatas & members, Path  prefix)
+        : members(members), prefix(std::move(prefix))
     { }
 
     void createDirectory(const Path & path) override

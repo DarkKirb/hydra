@@ -1,8 +1,12 @@
 UseColor: true
 Checks:
   - -*
+
   - bugprone-*
     # kind of nonsense
   - -bugprone-easily-swappable-parameters
     # many warnings due to not recognizing `assert` properly
   - -bugprone-unchecked-optional-access
+
+  - modernize-*
+  - -modernize-use-trailing-return-type

@@ -4,7 +4,8 @@
 #include "thread-pool.hh"
 
 #include <cstring>
-#include <signal.h>
+#include <utility>
+#include <csignal>
 
 using namespace nix;
 
@@ -88,7 +89,7 @@ void State::queueMonitorLoop(Connection & conn)
 
 struct PreviousFailure : public std::exception {
     Step::ptr step;
-    PreviousFailure(Step::ptr step) : step(step) { }
+    PreviousFailure(Step::ptr step) : step(std::move(step)) { }
 };
 
 
@@ -117,7 +118,7 @@ bool State::getQueuedBuilds(Connection & conn,
 
         for (auto const & row : res) {
             auto builds_(builds.lock());
-            BuildID id = row["id"].as<BuildID>();
+            auto id = row["id"].as<BuildID>();
             if (buildOne && id != buildOne) continue;
             if (builds_->count(id)) continue;
 
@@ -137,7 +138,7 @@ bool State::getQueuedBuilds(Connection & conn,
 
             newIDs.push_back(id);
             newBuildsByID[id] = build;
-            newBuildsByPath.emplace(std::make_pair(build->drvPath, id));
+            newBuildsByPath.emplace(build->drvPath, id);
         }
     }
 
@@ -162,7 +163,7 @@ bool State::getQueuedBuilds(Connection & conn,
                     ("update Builds set finished = 1, buildStatus = $2, startTime = $3, stopTime = $3 where id = $1 and finished = 0",
                      build->id,
                      (int) bsAborted,
-                     time(0));
+                     time(nullptr));
                 txn.commit();
                 build->finishedInDB = true;
                 nrBuildsDone++;
@@ -176,7 +177,7 @@ bool State::getQueuedBuilds(Connection & conn,
         /* Create steps for this derivation and its dependencies. */
         try {
             step = createStep(destStore, conn, build, build->drvPath,
-                build, 0, finishedDrvs, newSteps, newRunnable);
+                build, nullptr, finishedDrvs, newSteps, newRunnable);
         } catch (PreviousFailure & ex) {
 
             /* Some step previously failed, so mark the build as
@@ -221,7 +222,7 @@ bool State::getQueuedBuilds(Connection & conn,
                      "where id = $1 and finished = 0",
                      build->id,
                      (int) (ex.step->drvPath == build->drvPath ? bsFailed : bsDepFailed),
-                     time(0));
+                     time(nullptr));
                 notifyBuildFinished(txn, build->id, {});
                 txn.commit();
                 build->finishedInDB = true;
@@ -254,7 +255,7 @@ bool State::getQueuedBuilds(Connection & conn,
             {
             auto mc = startDbUpdate();
             pqxx::work txn(conn);
-            time_t now = time(0);
+            time_t now = time(nullptr);
             if (!buildOneDone && build->id == buildOne) buildOneDone = true;
             printMsg(lvlInfo, "marking build %1% as succeeded (cached)", build->id);
             markSucceededBuild(txn, build, res, true, now, now);
@@ -438,7 +439,7 @@ Step::ptr State::createStep(ref<Store> destStore,
     Build::ptr referringBuild, Step::ptr referringStep, std::set<StorePath> & finishedDrvs,
     std::set<Step::ptr> & newSteps, std::set<Step::ptr> & newRunnable)
 {
-    if (finishedDrvs.find(drvPath) != finishedDrvs.end()) return 0;
+    if (finishedDrvs.find(drvPath) != finishedDrvs.end()) return nullptr;
 
     /* Check if the requested step already exists. If not, create a
        new step. In any case, make the step reachable from
@@ -516,7 +517,7 @@ Step::ptr State::createStep(ref<Store> destStore,
     std::map<DrvOutput, std::optional<StorePath>> paths;
     for (auto & [outputName, maybeOutputPath] : destStore->queryPartialDerivationOutputMap(drvPath, &*localStore)) {
         auto outputHash = outputHashes.at(outputName);
-        paths.insert({{outputHash, outputName}, maybeOutputPath});
+        paths.insert({{.drvHash=outputHash, .outputName=outputName}, maybeOutputPath});
     }
 
     auto missing = getMissingRemotePaths(destStore, paths);
@@ -560,7 +561,7 @@ Step::ptr State::createStep(ref<Store> destStore,
                 auto & path = *pathOpt;
 
                 try {
-                    time_t startTime = time(0);
+                    time_t startTime = time(nullptr);
 
                     if (localStore->isValidPath(path))
                         printInfo("copying output ‘%1%’ of ‘%2%’ from local store",
@@ -578,7 +579,7 @@ Step::ptr State::createStep(ref<Store> destStore,
                         StorePathSet { path },
                         NoRepair, CheckSigs, NoSubstitute);
 
-                    time_t stopTime = time(0);
+                    time_t stopTime = time(nullptr);
 
                     {
                         auto mc = startDbUpdate();
@@ -602,7 +603,7 @@ Step::ptr State::createStep(ref<Store> destStore,
     // FIXME: check whether all outputs are in the binary cache.
     if (valid) {
         finishedDrvs.insert(drvPath);
-        return 0;
+        return nullptr;
     }
 
     /* No, we need to build. */
@@ -610,7 +611,7 @@ Step::ptr State::createStep(ref<Store> destStore,
 
     /* Create steps for the dependencies. */
     for (auto & i : step->drv->inputDrvs.map) {
-        auto dep = createStep(destStore, conn, build, i.first, 0, step, finishedDrvs, newSteps, newRunnable);
+        auto dep = createStep(destStore, conn, build, i.first, nullptr, step, finishedDrvs, newSteps, newRunnable);
         if (dep) {
             auto step_(step->state.lock());
             step_->deps.insert(dep);
@@ -658,11 +659,11 @@ Jobset::ptr State::createJobset(pqxx::work & txn,
     auto res2 = txn.exec_params
         ("select s.startTime, s.stopTime from BuildSteps s join Builds b on build = id "
          "where s.startTime is not null and s.stopTime > $1 and jobset_id = $2",
-         time(0) - Jobset::schedulingWindow * 10,
+         time(nullptr) - Jobset::schedulingWindow * 10,
          jobsetID);
     for (auto const & row : res2) {
-        time_t startTime = row["startTime"].as<time_t>();
-        time_t stopTime = row["stopTime"].as<time_t>();
+        auto startTime = row["startTime"].as<time_t>();
+        auto stopTime = row["stopTime"].as<time_t>();
         jobset->addStep(startTime, stopTime - startTime);
     }
 
@@ -702,7 +703,7 @@ BuildOutput State::getBuildOutputCached(Connection & conn, nix::ref<nix::Store> 
              "where finished = 1 and (buildStatus = 0 or buildStatus = 6) and path = $1",
              localStore->printStorePath(output));
         if (r.empty()) continue;
-        BuildID id = r[0][0].as<BuildID>();
+        auto id = r[0][0].as<BuildID>();
 
         printInfo("reusing build %d", id);
 

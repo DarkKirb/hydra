@@ -8,6 +8,7 @@
 #include <queue>
 #include <regex>
 #include <semaphore>
+#include <utility>
 
 #include <prometheus/counter.h>
 #include <prometheus/gauge.h>
@@ -26,16 +27,16 @@
 #include "machines.hh"
 
 
-typedef unsigned int BuildID;
+using BuildID = unsigned int;
 
-typedef unsigned int JobsetID;
+using JobsetID = unsigned int;
 
-typedef std::chrono::time_point<std::chrono::system_clock> system_time;
+using system_time = std::chrono::time_point<std::chrono::system_clock>;
 
-typedef std::atomic<unsigned long> counter;
+using counter = std::atomic<unsigned long>;
 
 
-typedef enum {
+enum BuildStatus {
     bsSuccess = 0,
     bsFailed = 1,
     bsDepFailed = 2, // builds only
@@ -49,10 +50,10 @@ typedef enum {
     bsNarSizeLimitExceeded = 11,
     bsNotDeterministic = 12,
     bsBusy = 100, // not stored
-} BuildStatus;
+};
 
 
-typedef enum {
+enum StepState {
     ssPreparing = 1,
     ssConnecting = 10,
     ssSendingInputs = 20,
@@ -60,7 +61,7 @@ typedef enum {
     ssWaitingForLocalSlot = 35,
     ssReceivingOutputs = 40,
     ssPostProcessing = 50,
-} StepState;
+};
 
 
 struct RemoteResult
@@ -78,7 +79,7 @@ struct RemoteResult
     unsigned int overhead = 0;
     nix::Path logFile;
 
-    BuildStatus buildStatus() const
+    [[nodiscard]] BuildStatus buildStatus() const
     {
         return stepStatus == bsCachedFailure ? bsFailed : stepStatus;
     }
@@ -95,8 +96,8 @@ class Jobset
 {
 public:
 
-    typedef std::shared_ptr<Jobset> ptr;
-    typedef std::weak_ptr<Jobset> wptr;
+    using ptr = std::shared_ptr<Jobset>;
+    using wptr = std::weak_ptr<Jobset>;
 
     static const time_t schedulingWindow = static_cast<time_t>(24 * 60 * 60);
 
@@ -131,8 +132,8 @@ public:
 
 struct Build
 {
-    typedef std::shared_ptr<Build> ptr;
-    typedef std::weak_ptr<Build> wptr;
+    using ptr = std::shared_ptr<Build>;
+    using wptr = std::weak_ptr<Build>;
 
     BuildID id;
     nix::StorePath drvPath;
@@ -163,8 +164,8 @@ struct Build
 
 struct Step
 {
-    typedef std::shared_ptr<Step> ptr;
-    typedef std::weak_ptr<Step> wptr;
+    using ptr = std::shared_ptr<Step>;
+    using wptr = std::weak_ptr<Step>;
 
     nix::StorePath drvPath;
     std::unique_ptr<nix::Derivation> drv;
@@ -221,13 +222,8 @@ struct Step
 
     nix::Sync<State> state;
 
-    Step(const nix::StorePath & drvPath) : drvPath(drvPath)
+    Step(nix::StorePath  drvPath) : drvPath(std::move(drvPath))
     { }
-
-    ~Step()
-    {
-        //printMsg(lvlError, format("destroying step %1%") % drvPath);
-    }
 };
 
 
@@ -239,7 +235,7 @@ void visitDependencies(std::function<void(Step::ptr)> visitor, Step::ptr step);
 
 struct Machine : nix::Machine
 {
-    typedef std::shared_ptr<Machine> ptr;
+    using ptr = std::shared_ptr<Machine>;
 
     /* TODO Get rid of: `nix::Machine::storeUri` is normalized in a way
        we are not yet used to, but once we are, we don't need this. */
@@ -254,7 +250,7 @@ struct Machine : nix::Machine
     float speedFactorFloat = 1.0;
 
     struct State {
-        typedef std::shared_ptr<State> ptr;
+        using ptr = std::shared_ptr<State>;
         counter currentJobs{0};
         counter nrStepsDone{0};
         counter totalStepTime{0}; // total time for steps, including closure copying
@@ -358,22 +354,22 @@ private:
     bool useSubstitutes = false;
 
     /* The queued builds. */
-    typedef std::map<BuildID, Build::ptr> Builds;
+    using Builds = std::map<BuildID, Build::ptr>;
     nix::Sync<Builds> builds;
 
     /* The jobsets. */
-    typedef std::map<std::pair<std::string, std::string>, Jobset::ptr> Jobsets;
+    using Jobsets = std::map<std::pair<std::string, std::string>, Jobset::ptr>;
     nix::Sync<Jobsets> jobsets;
 
     /* All active or pending build steps (i.e. dependencies of the
        queued builds). Note that these are weak pointers. Steps are
        kept alive by being reachable from Builds or by being in
        progress. */
-    typedef std::map<nix::StorePath, Step::wptr> Steps;
+    using Steps = std::map<nix::StorePath, Step::wptr>;
     nix::Sync<Steps> steps;
 
     /* Build steps that have no unbuilt dependencies. */
-    typedef std::list<Step::wptr> Runnable;
+    using Runnable = std::list<Step::wptr>;
     nix::Sync<Runnable> runnable;
 
     /* CV for waking up the dispatcher. */
@@ -385,7 +381,7 @@ private:
 
     /* The build machines. */
     std::mutex machinesReadyLock;
-    typedef std::map<std::string, Machine::ptr> Machines;
+    using Machines = std::map<std::string, Machine::ptr>;
     nix::Sync<Machines> machines; // FIXME: use atomic_shared_ptr
 
     /* Throttler for CPU-bound local work. */
@@ -431,7 +427,7 @@ private:
 
     struct MachineReservation
     {
-        typedef std::shared_ptr<MachineReservation> ptr;
+        using ptr = std::shared_ptr<MachineReservation>;
         State & state;
         Step::ptr step;
         Machine::ptr machine;

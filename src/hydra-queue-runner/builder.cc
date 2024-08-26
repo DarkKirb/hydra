@@ -58,7 +58,7 @@ void State::builder(MachineReservation::ptr reservation)
     /* If the machine hasn't been released yet, release and wake up the dispatcher. */
     if (reservation) {
         assert(reservation.unique());
-        reservation = 0;
+        reservation = nullptr;
         wakeDispatcher();
     }
 
@@ -190,7 +190,7 @@ State::StepResult State::doBuildStep(nix::ref<Store> destStore,
         }
     });
 
-    time_t stepStartTime = result.startTime = time(0);
+    time_t stepStartTime = result.startTime = time(nullptr);
 
     /* If any of the outputs have previously failed, then don't bother
        building again. */
@@ -237,7 +237,7 @@ State::StepResult State::doBuildStep(nix::ref<Store> destStore,
         }
     }
 
-    time_t stepStopTime = time(0);
+    time_t stepStopTime = time(nullptr);
     if (!result.stopTime) result.stopTime = stepStopTime;
 
     /* For standard failures, we don't care about the error
