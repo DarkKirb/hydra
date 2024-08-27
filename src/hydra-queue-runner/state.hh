@@ -619,8 +619,6 @@ private:
 
     void addRoot(const nix::StorePath & storePath);
 
-    void runMetricsExporter();
-
 public:
 
     void showStatus();
