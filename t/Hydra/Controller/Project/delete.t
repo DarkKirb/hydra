@@ -11,20 +11,14 @@ my $ctx = test_context();
 
 Catalyst::Test->import('Hydra');
 
-my $user = $ctx->db()->resultset('Users')->create({
-    username => 'alice',
-    emailaddress => 'root@invalid.org',
-    password => '!'
-});
-$user->setPassword('foobar');
-$user->userroles->update_or_create({ role => 'admin' });
+$ctx->db();  # Ensure DB initialization.
 
 # Login and save cookie for future requests
 my $req = request(POST '/login',
     Referer => 'http://localhost/',
     Content => {
-        username => 'alice',
-        password => 'foobar'
+        username => 'root',
+        password => 'rootPassword'
     }
 );
 is($req->code, 302, "Logging in gets a 302");

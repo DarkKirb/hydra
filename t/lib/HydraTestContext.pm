@@ -115,11 +115,13 @@ sub db {
         $self->{_db} = Hydra::Model::DB->new();
 
         if (!(defined $setup && $setup == 0)) {
-            $self->{_db}->resultset('Users')->create({
+            my $user = $self->{_db}->resultset('Users')->create({
                 username => "root",
                 emailaddress => 'root@invalid.org',
-                password => ''
+                password => '!'
             });
+            $user->setPassword('rootPassword');
+            $user->userroles->update_or_create({ role => 'admin' });
         }
     }
 

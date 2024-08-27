@@ -35,6 +35,17 @@ my $queuedBuilds = $ctx->makeAndEvaluateJobset(
     build => 0
 );
 
+# Login and save cookie for future requests
+my $req = request(POST '/login',
+    Referer => 'http://localhost/',
+    Content => {
+        username => 'root',
+        password => 'rootPassword'
+    }
+);
+is($req->code, 302, "Logging in gets a 302");
+my $cookie = $req->header("set-cookie");
+
 subtest "/api/queue" => sub {
     my $response = request(GET '/api/queue?nr=1');
     ok($response->is_success, "The API enpdoint showing the queue returns 200.");
@@ -102,7 +113,7 @@ subtest "/api/nrbuilds" => sub {
 };
 
 subtest "/api/push" => sub {
-    subtest "with a specific jobset" => sub {
+    subtest "without authentication" => sub {
         my $build = $finishedBuilds->{"one_job"};
         my $jobset = $build->jobset;
         my $projectName = $jobset->project->name;
@@ -110,6 +121,18 @@ subtest "/api/push" => sub {
         is($jobset->forceeval, undef, "The existing jobset is not set to be forced to eval");
 
         my $response = request(GET "/api/push?jobsets=$projectName:$jobsetName&force=1");
+        is($response->code, 403, "The API enpdoint for triggering jobsets requires authentication.");
+    };
+
+    subtest "with a specific jobset" => sub {
+        my $build = $finishedBuilds->{"one_job"};
+        my $jobset = $build->jobset;
+        my $projectName = $jobset->project->name;
+        my $jobsetName = $jobset->name;
+        is($jobset->forceeval, undef, "The existing jobset is not set to be forced to eval");
+
+        my $response = request(GET "/api/push?jobsets=$projectName:$jobsetName&force=1",
+                               Cookie => $cookie);
         ok($response->is_success, "The API enpdoint for triggering jobsets returns 200.");
 
         my $data = is_json($response);
@@ -128,7 +151,8 @@ subtest "/api/push" => sub {
 
         print STDERR $repo;
 
-        my $response = request(GET "/api/push?repos=$repo&force=1");
+        my $response = request(GET "/api/push?repos=$repo&force=1",
+                               Cookie => $cookie);
         ok($response->is_success, "The API enpdoint for triggering jobsets returns 200.");
 
         my $data = is_json($response);
