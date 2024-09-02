@@ -1,6 +1,7 @@
 #include "hydra-build-result.hh"
 #include "store-api.hh"
 #include "fs-accessor.hh"
+#include "strings.hh"
 
 #include <regex>
 
