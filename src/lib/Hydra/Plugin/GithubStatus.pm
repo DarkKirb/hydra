@@ -38,15 +38,14 @@ sub common {
         my $ua = LWP::UserAgent->new();
 
         foreach my $conf (@config) {
-            next unless $jobName =~ /^$conf->{jobs}$/;
             # Don't send out "pending" status updates if the build is already finished
             next if !$finished && $build->finished == 1;
 
-            my $contextTrailer = $conf->{excludeBuildFromContext} ? "" : (":" . $build->id);
-            my $github_job_name = $jobName =~ s/-pr-\d+//r;
+            my $contextTrailer = "";
+            my $github_job_name = $jobName =~ s/-?pr-?\d+//r;
             my $extendedContext = $conf->{context} // "continuous-integration/hydra:" . $jobName . $contextTrailer;
             my $shortContext = $conf->{context} // "ci/hydra:" . $github_job_name . $contextTrailer;
-            my $context = $conf->{useShortContext} ? $shortContext : $extendedContext;
+            my $context = $shortContext;
             my $body = encode_json(
                 {
                     state => $finished ? toGithubState($build->buildstatus) : "pending",
@@ -103,17 +102,13 @@ sub common {
                         print STDERR "Can't parse flake, skipping GitHub status update\n";
                     }
                 } else {
-                    foreach my $input (@inputs) {
-                        my $i = $eval->jobsetevalinputs->find({ name => $input, altnr => 0 });
-                        if (! defined $i) {
-                            print STDERR "Evaluation $eval doesn't have input $input\n";
-                        }
-                        next unless defined $i;
-                        my $uri = $i->uri;
-                        my $rev = $i->revision;
-                        $uri =~ m![:/]([^/]+)/([^/]+?)(?:.git)?$!;
-                        $sendStatus->($input, $1, $2, $rev);
-                    }
+                    next unless defined ($eval->jobsetevalinputs->find({ name => "github_input" }));
+                    my $input = $eval->jobsetevalinputs->find({ name => "github_input" })->value;
+                    my $repoOwner = $eval->jobsetevalinputs->find({ name => "github_repo_owner" })->value;
+                    my $repoName = $eval->jobsetevalinputs->find({ name => "github_repo_name" })->value;
+                    my $i = $eval->jobsetevalinputs->find({ name => $input, altnr => 0 });
+                    my $rev = $i->revision;
+                    $sendStatus->($input, $repoOwner, $repoName, $rev);
                 }
             }
         }
@@ -143,3 +138,4 @@ sub cachedBuildFinished {
 }
 
 1;
+
