@@ -40,7 +40,7 @@ sub fetchInput {
     my $auth = $self->{config}->{gitea_authorization}->{$owner};
     my %pulls;
     my $ua = LWP::UserAgent->new();
-    _iterate("https://$domain/api/v1/repos/$owner/$repo/pulls?types=pulls&per_page=100", 1, $auth, \%pulls, $ua);
+    _iterate("https://$domain/api/v1/repos/$owner/$repo/pulls?status=open&per_page=100", 1, $auth, \%pulls, $ua);
     my $tempdir = File::Temp->newdir("gitea-pulls" . "XXXXX", TMPDIR => 1);
     my $filename = "$tempdir/gitea-pulls.json";
 
