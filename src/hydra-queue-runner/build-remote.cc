@@ -654,11 +654,6 @@ void State::buildRemote(ref<Store> destStore,
             size_t totalNarSize = 0;
             auto infos = build_remote::queryPathInfos(conn, *localStore, outputs, totalNarSize);
 
-            if (totalNarSize > maxOutputSize) {
-                result.stepStatus = bsNarSizeLimitExceeded;
-                return;
-            }
-
             /* Copy each path. */
             printMsg(lvlDebug, "copying outputs of ‘%s’ from ‘%s’ (%d bytes)",
                 localStore->printStorePath(step->drvPath), machine->sshName, totalNarSize);
